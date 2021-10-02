@@ -55,6 +55,8 @@ get_required_kitsune_lib_repo "libKitsunemimiCommon" "v0.20.0" 4 "staticlib"
 
 get_required_kitsune_lib_repo "libKitsunemimiCrypto" "v0.1.0" 4 "staticlib"
 
+get_required_kitsune_lib_repo "libKitsunemimiJson" "v0.10.7" 4 "staticlib"
+
 #-----------------------------------------------------------------------------------------------------------------
 
 if [ $1 = "test" ]; then

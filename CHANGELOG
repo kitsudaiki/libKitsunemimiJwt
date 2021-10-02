@@ -1,2 +1,6 @@
 # Changelog
 
+## [0.1.0] - 2021-10-02
+
+### Added
+- initial version with sign and verify JWT-tokens of type HS256
