@@ -37,9 +37,9 @@ IMPORTANT: All my projects are only tested on Linux.
 
 Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
-libKitsunemimiCommon | v0.20.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
-libKitsunemimiCrypto | v0.1.0 |  -
-libKitsunemimiJson | v0.10.7 |  https://github.com/kitsudaiki/libKitsunemimiJson.git
+libKitsunemimiCommon | v0.22.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
+libKitsunemimiCrypto | v0.1.1 |  -
+libKitsunemimiJson | v0.10.8 |  https://github.com/kitsudaiki/libKitsunemimiJson.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
