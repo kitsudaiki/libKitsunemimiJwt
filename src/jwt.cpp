@@ -65,34 +65,42 @@ Jwt::create_HS256_Token(std::string &result,
 /**
  * @brief validate a HS256-Token
  *
+ * @param payload reference for returning the payload of the token, if valid
  * @param token token to validate
  *
  * @return true, if token is valid, else false
  */
 bool
-Jwt::validate_HS256_Token(const std::string &token)
+Jwt::validate_HS256_Token(std::string &payload,
+                          const std::string &token)
 {
     if(token.size() == 0) {
         return false;
     }
 
+    // filter relevant part from the token
     std::vector<std::string> tokenParts;
     Kitsunemimi::splitStringByDelimiter(tokenParts, token, '.');
-
     if(tokenParts.size() != 3) {
         return false;
     }
-
     const std::string relevantPart = tokenParts.at(0) + "." + tokenParts.at(1);
 
+    // create hmac again
     std::string compare;
     Kitsunemimi::Crypto::create_HMAC_SHA256(compare, relevantPart, m_signingKey);
     Kitsunemimi::Crypto::base64ToBase64Url(compare);
 
+    // compare new create hmac-value with the one from the token
     const std::string signature = tokenParts.at(2);
     if(compare.size() == signature.size()
-       && CRYPTO_memcmp(compare.c_str(), signature.c_str(), compare.size()) == 0)
+            && CRYPTO_memcmp(compare.c_str(), signature.c_str(), compare.size()) == 0)
     {
+        // convert payload for output
+        payload = tokenParts.at(1);
+        Kitsunemimi::Crypto::base64UrlToBase64(payload);
+        Kitsunemimi::Crypto::decodeBase64(payload, payload);
+
         return true;
     }
 

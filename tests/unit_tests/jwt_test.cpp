@@ -56,9 +56,15 @@ JWT_Test::create_validate_HS256_Token_test()
                                      ".fdOPQ05ZfRhkST2-rIWgUpbqUsVhkkNVNcuG7Ki0s-8";
     TEST_EQUAL(token, compareToken);
 
-    TEST_EQUAL(jwt.validate_HS256_Token(token), true);
+    std::string payload;
+    TEST_EQUAL(jwt.validate_HS256_Token(payload, token), true);
+    const std::string comparePayload = "{\"iat\":1516239022,"
+                                       "\"name\":\"John Doe\","
+                                       "\"sub\":\"1234567890\"}";
+    TEST_EQUAL(payload, comparePayload);
+
     token[24] = 'x';
-    TEST_EQUAL(jwt.validate_HS256_Token(token), false);
+    TEST_EQUAL(jwt.validate_HS256_Token(payload, token), false);
 }
 
 }

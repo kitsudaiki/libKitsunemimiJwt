@@ -26,7 +26,7 @@ public:
 
     bool create_HS256_Token(std::string &result,
                             const std::string &payload);
-    bool validate_HS256_Token(const std::string &token);
+    bool validate_HS256_Token(std::string &payload, const std::string &token);
 
 private:
     CryptoPP::SecByteBlock m_signingKey;
