@@ -6,10 +6,11 @@
  *  @copyright  MIT License
  */
 
-#ifndef JWT_H
-#define JWT_H
+#ifndef KITSUNEMIMI_JWT_H
+#define KITSUNEMIMI_JWT_H
 
 #include <cryptopp/secblock.h>
+#include <libKitsunemimiCommon/logger.h>
 
 namespace Kitsunemimi
 {
@@ -26,7 +27,9 @@ public:
 
     bool create_HS256_Token(std::string &result,
                             const std::string &payload);
-    bool validate_HS256_Token(std::string &payload, const std::string &token);
+    bool validate_HS256_Token(Kitsunemimi::Json::JsonItem &payload,
+                              const std::string &token,
+                              ErrorContainer &error);
 
 private:
     CryptoPP::SecByteBlock m_signingKey;
@@ -35,4 +38,4 @@ private:
 }
 }
 
-#endif // JWT_H
+#endif // KITSUNEMIMI_JWT_H

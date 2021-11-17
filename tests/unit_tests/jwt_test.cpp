@@ -42,8 +42,8 @@ JWT_Test::create_validate_HS256_Token_test()
                                     "    \"iat\":1516239022"
                                     "}";
     Kitsunemimi::Json::JsonItem payloadJson;
-    std::string errorMessage = "";
-    assert(payloadJson.parse(testPayload, errorMessage));
+    ErrorContainer error;
+    assert(payloadJson.parse(testPayload, error));
 
     // test token-creation
     std::string token;
@@ -56,15 +56,15 @@ JWT_Test::create_validate_HS256_Token_test()
                                      ".fdOPQ05ZfRhkST2-rIWgUpbqUsVhkkNVNcuG7Ki0s-8";
     TEST_EQUAL(token, compareToken);
 
-    std::string payload;
-    TEST_EQUAL(jwt.validate_HS256_Token(payload, token), true);
+    Kitsunemimi::Json::JsonItem resultPayloadJson;
+    TEST_EQUAL(jwt.validate_HS256_Token(resultPayloadJson, token, error), true);
     const std::string comparePayload = "{\"iat\":1516239022,"
                                        "\"name\":\"John Doe\","
                                        "\"sub\":\"1234567890\"}";
-    TEST_EQUAL(payload, comparePayload);
+    TEST_EQUAL(resultPayloadJson.toString(false), comparePayload);
 
     token[24] = 'x';
-    TEST_EQUAL(jwt.validate_HS256_Token(payload, token), false);
+    TEST_EQUAL(jwt.validate_HS256_Token(resultPayloadJson, token, error), false);
 }
 
 }

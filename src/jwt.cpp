@@ -11,6 +11,7 @@
 #include <libKitsunemimiCrypto/signing.h>
 #include <libKitsunemimiCrypto/common.h>
 #include <libKitsunemimiJson/json_item.h>
+
 #include <libKitsunemimiCommon/common_methods/string_methods.h>
 
 namespace Kitsunemimi
@@ -67,21 +68,29 @@ Jwt::create_HS256_Token(std::string &result,
  *
  * @param payload reference for returning the payload of the token, if valid
  * @param token token to validate
+ * @param error reference for error-output
  *
  * @return true, if token is valid, else false
  */
 bool
-Jwt::validate_HS256_Token(std::string &payload,
-                          const std::string &token)
+Jwt::validate_HS256_Token(Json::JsonItem &payload,
+                          const std::string &token,
+                          ErrorContainer &error)
 {
-    if(token.size() == 0) {
+    if(token.size() == 0)
+    {
+        error.addMeesage("token is empty");
+        LOG_ERROR(error);
         return false;
     }
 
     // filter relevant part from the token
     std::vector<std::string> tokenParts;
     Kitsunemimi::splitStringByDelimiter(tokenParts, token, '.');
-    if(tokenParts.size() != 3) {
+    if(tokenParts.size() != 3)
+    {
+        error.addMeesage("token is broken");
+        LOG_ERROR(error);
         return false;
     }
     const std::string relevantPart = tokenParts.at(0) + "." + tokenParts.at(1);
@@ -97,12 +106,21 @@ Jwt::validate_HS256_Token(std::string &payload,
             && CRYPTO_memcmp(compare.c_str(), signature.c_str(), compare.size()) == 0)
     {
         // convert payload for output
-        payload = tokenParts.at(1);
-        Kitsunemimi::Crypto::base64UrlToBase64(payload);
-        Kitsunemimi::Crypto::decodeBase64(payload, payload);
+        std::string stringPayload = tokenParts.at(1);
+        Kitsunemimi::Crypto::base64UrlToBase64(stringPayload);
+        Kitsunemimi::Crypto::decodeBase64(stringPayload, stringPayload);
+
+        if(payload.parse(stringPayload, error) == false) {
+
+            LOG_ERROR(error);
+            return false;
+        }
 
         return true;
     }
+
+    error.addMeesage("token is invalid");
+    LOG_ERROR(error);
 
     return false;
 }
