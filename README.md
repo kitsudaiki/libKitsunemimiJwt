@@ -39,7 +39,7 @@ Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
 libKitsunemimiCommon | v0.23.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
 libKitsunemimiCrypto | v0.2.0 |  -
-libKitsunemimiJson | v0.11.0 |  https://github.com/kitsudaiki/libKitsunemimiJson.git
+libKitsunemimiJson | v0.11.1 |  https://github.com/kitsudaiki/libKitsunemimiJson.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
