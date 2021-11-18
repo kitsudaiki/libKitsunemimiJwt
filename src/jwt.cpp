@@ -34,13 +34,18 @@ Jwt::Jwt(const CryptoPP::SecByteBlock &signingKey)
  *
  * @param result reference for the resulting token
  * @param payload payload which has to be signed
+ * @param validSeconds timespan in second in which the token is valid.
+ *                     If value is 0, the token doesn't expire
  *
  * @return true, if successfull, else false
  */
 bool
 Jwt::create_HS256_Token(std::string &result,
-                        const std::string &payload)
+                        Kitsunemimi::Json::JsonItem &payload,
+                        const u_int32_t validSeconds)
 {
+    LOG_DEBUG("Create new HS256-JWT-Token");
+
     // convert header
     const std::string header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
     std::string headerBase64;
@@ -48,9 +53,13 @@ Jwt::create_HS256_Token(std::string &result,
     Kitsunemimi::Crypto::base64ToBase64Url(headerBase64);
     result = headerBase64;
 
+    // add timestamps
+    addTimesToPayload(payload, validSeconds);
+
     // convert payload
     std::string payloadBase64;
-    Kitsunemimi::Crypto::encodeBase64(payloadBase64, payload.c_str(), payload.size());
+    const std::string payloadString = payload.toString();
+    Kitsunemimi::Crypto::encodeBase64(payloadBase64, payloadString.c_str(), payloadString.size());
     Kitsunemimi::Crypto::base64ToBase64Url(payloadBase64);
     result += "." + payloadBase64;
 
@@ -66,17 +75,19 @@ Jwt::create_HS256_Token(std::string &result,
 /**
  * @brief validate a jwt-Token
  *
- * @param payload reference for returning the payload of the token, if valid
+ * @param resultPayload reference for returning the payload of the token, if valid
  * @param token token to validate
  * @param error reference for error-output
  *
  * @return true, if token is valid, else false
  */
 bool
-Jwt::validateToken(Json::JsonItem &payload,
+Jwt::validateToken(Json::JsonItem &resultPayload,
                    const std::string &token,
                    ErrorContainer &error)
 {
+    LOG_DEBUG("Validate JWT-Token");
+
     // precheck token
     if(token.size() == 0)
     {
@@ -103,7 +114,16 @@ Jwt::validateToken(Json::JsonItem &payload,
     Kitsunemimi::Crypto::decodeBase64(headerString, headerString);
     if(header.parse(headerString, error) == false)
     {
-        error.addMeesage("Jwt-header is broken");
+        error.addMeesage("Token-header is broken");
+        LOG_ERROR(error);
+        return false;
+    }
+
+    // check if header is complete
+    if(header.contains("alg") == false
+            || header.contains("typ") == false)
+    {
+        error.addMeesage("Token-header is not a valid JWT-header");
         LOG_ERROR(error);
         return false;
     }
@@ -132,12 +152,22 @@ Jwt::validateToken(Json::JsonItem &payload,
     std::string payloadString = tokenParts.at(1);
     Kitsunemimi::Crypto::base64UrlToBase64(payloadString);
     Kitsunemimi::Crypto::decodeBase64(payloadString, payloadString);
-    if(payload.parse(payloadString, error) == false)
+    if(resultPayload.parse(payloadString, error) == false)
     {
         error.addMeesage("Jwt-payload is broken");
         LOG_ERROR(error);
         return false;
     }
+
+    // check time-stamps within the payload
+    if(checkTimesInPayload(resultPayload, error) ==  false)
+    {
+        error.addMeesage("Time-check of JWT-token failed.");
+        LOG_ERROR(error);
+        return false;
+    }
+
+    LOG_DEBUG("Validation of JWT-Token was successfull.");
 
     return true;
 }
@@ -159,7 +189,7 @@ Jwt::validateSignature(const std::string &alg,
                        ErrorContainer &error)
 {
     if(alg == "HS256") {
-        return validate_HS256_Token(relevantPart, signature, error);
+        return validate_HS256_Signature(relevantPart, signature, error);
     }
 
     error.addMeesage("Jwt-token can not be validated, because the algorithm \"" + alg + "\"\n"
@@ -178,7 +208,7 @@ Jwt::validateSignature(const std::string &alg,
  * @return true, if token is valid, else false
  */
 bool
-Jwt::validate_HS256_Token(const std::string &relevantPart,
+Jwt::validate_HS256_Signature(const std::string &relevantPart,
                           const std::string &signature,
                           ErrorContainer &error)
 {
@@ -194,10 +224,85 @@ Jwt::validate_HS256_Token(const std::string &relevantPart,
         return true;
     }
 
-    error.addMeesage("token is invalid");
+    error.addMeesage("Check HS256-signature of the JWT-Token failed");
     LOG_ERROR(error);
 
     return false;
+}
+
+/**
+ * @brief add timestamps to jwt-token-payload
+ *
+ * @param payload token-payload to write times into it
+ * @param validSeconds timespan in second in which the token is valid.
+ *                     If value is 0, the token doesn't expire
+ */
+void
+Jwt::addTimesToPayload(Json::JsonItem &payload,
+                       const u_int32_t validSeconds)
+{
+    // get times
+    const long nowSec = getTimeSinceEpoch();
+    const long exp = nowSec + validSeconds;
+
+    // add times to payload
+    // IMPORTANT: use of force-flag to ensure that are no predefined values are allowed
+    if(validSeconds != 0) {
+        payload.insert("exp", exp, true);
+    }
+    payload.insert("nbf", nowSec, true);
+    payload.insert("iat", nowSec, true);
+}
+
+/**
+ * @brief check timestamps within the token-payload
+ *
+ * @param payload payload of the jwt-token
+ * @param error reference for error-output
+ *
+ * @return true, if times are valid, else false
+ */
+bool
+Jwt::checkTimesInPayload(const Json::JsonItem &payload,
+                         ErrorContainer &error)
+{
+    const long nowSec = getTimeSinceEpoch();
+
+    // check if token is already expired
+    if(payload.contains("exp"))
+    {
+        const long exp = payload.get("exp").getLong();
+        if(exp < nowSec)
+        {
+            error.addMeesage("Jwt-token is expired");
+            LOG_ERROR(error);
+            return false;
+        }
+    }
+
+    // check if token is already allowed
+    if(payload.contains("nbf"))
+    {
+        const long nbf = payload.get("nbf").getLong();
+        if(nbf > nowSec)
+        {
+            error.addMeesage("Jwt-token is at the current time still not allowed");
+            LOG_ERROR(error);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @brief get time since epoch in seconds
+ */
+long
+Jwt::getTimeSinceEpoch()
+{
+    const std::chrono::high_resolution_clock::time_point now = std::chrono::system_clock::now();
+    return std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 }
 
 }

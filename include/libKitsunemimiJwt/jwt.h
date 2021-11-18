@@ -10,6 +10,8 @@
 #define KITSUNEMIMI_JWT_H
 
 #include <cryptopp/secblock.h>
+#include <chrono>
+
 #include <libKitsunemimiCommon/logger.h>
 
 namespace Kitsunemimi
@@ -26,9 +28,10 @@ public:
     Jwt(const CryptoPP::SecByteBlock &signingKey);
 
     bool create_HS256_Token(std::string &result,
-                            const std::string &payload);
+                            Kitsunemimi::Json::JsonItem &payload,
+                            const u_int32_t validSeconds);
 
-    bool validateToken(Kitsunemimi::Json::JsonItem &payload,
+    bool validateToken(Kitsunemimi::Json::JsonItem &resultPayload,
                        const std::string &token,
                        ErrorContainer &error);
 
@@ -36,13 +39,21 @@ public:
 private:
     CryptoPP::SecByteBlock m_signingKey;
 
+    // signature
     bool validateSignature(const std::string &alg,
                            const std::string &relevantPart,
                            const std::string &signature,
                            ErrorContainer &error);
-    bool validate_HS256_Token(const std::string &relevantPart,
-                              const std::string &signature,
-                              ErrorContainer &error);
+    bool validate_HS256_Signature(const std::string &relevantPart,
+                                  const std::string &signature,
+                                  ErrorContainer &error);
+
+    // times
+    void addTimesToPayload(Kitsunemimi::Json::JsonItem &payload,
+                           const u_int32_t validSeconds);
+    bool checkTimesInPayload(const Json::JsonItem &payload,
+                             ErrorContainer &error);
+    long getTimeSinceEpoch();
 };
 
 }

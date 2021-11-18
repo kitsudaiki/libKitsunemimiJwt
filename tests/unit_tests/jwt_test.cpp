@@ -50,23 +50,16 @@ JWT_Test::create_validate_HS256_Token_test()
 
     // test token-creation
     std::string token;
-    TEST_EQUAL(jwt.create_HS256_Token(token, payloadJson.toString()), true);
+    TEST_EQUAL(jwt.create_HS256_Token(token, payloadJson, 1000), true);
+    LOG_DEBUG("token: " + token);
 
-    // test result
-    const std::string compareToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                                     ".eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJ"
-                                     "Kb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ"
-                                     ".fdOPQ05ZfRhkST2-rIWgUpbqUsVhkkNVNcuG7Ki0s-8";
-    TEST_EQUAL(token, compareToken);
-
+    // test token-validation with valid token
     Kitsunemimi::Json::JsonItem resultPayloadJson;
     TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, error), true);
+    TEST_EQUAL(resultPayloadJson.get("name").getString(), "John Doe");
     error._errorMessages.clear();
-    const std::string comparePayload = "{\"iat\":1516239022,"
-                                       "\"name\":\"John Doe\","
-                                       "\"sub\":\"1234567890\"}";
-    TEST_EQUAL(resultPayloadJson.toString(false), comparePayload);
 
+    // test token-validation with broken token
     token[token.size() - 5] = 'x';
     TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, error), false);
     error._errorMessages.clear();
