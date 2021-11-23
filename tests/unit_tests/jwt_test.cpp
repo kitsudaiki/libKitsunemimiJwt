@@ -45,6 +45,7 @@ JWT_Test::create_validate_HS256_Token_test()
                                     "}";
     Kitsunemimi::Json::JsonItem payloadJson;
     ErrorContainer error;
+    std::string publicError = "";
     assert(payloadJson.parse(testPayload, error));
     error._errorMessages.clear();
 
@@ -55,13 +56,13 @@ JWT_Test::create_validate_HS256_Token_test()
 
     // test token-validation with valid token
     Kitsunemimi::Json::JsonItem resultPayloadJson;
-    TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, error), true);
+    TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, publicError, error), true);
     TEST_EQUAL(resultPayloadJson.get("name").getString(), "John Doe");
     error._errorMessages.clear();
 
     // test token-validation with broken token
     token[token.size() - 5] = 'x';
-    TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, error), false);
+    TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, publicError, error), false);
     error._errorMessages.clear();
 }
 

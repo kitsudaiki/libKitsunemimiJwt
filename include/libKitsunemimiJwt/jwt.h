@@ -33,6 +33,7 @@ public:
 
     bool validateToken(Kitsunemimi::Json::JsonItem &resultPayload,
                        const std::string &token,
+                       std::string &publicError,
                        ErrorContainer &error);
 
 

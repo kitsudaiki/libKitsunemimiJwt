@@ -77,6 +77,7 @@ Jwt::create_HS256_Token(std::string &result,
  *
  * @param resultPayload reference for returning the payload of the token, if valid
  * @param token token to validate
+ * @param publicError error-string for output to user
  * @param error reference for error-output
  *
  * @return true, if token is valid, else false
@@ -84,6 +85,7 @@ Jwt::create_HS256_Token(std::string &result,
 bool
 Jwt::validateToken(Json::JsonItem &resultPayload,
                    const std::string &token,
+                   std::string &publicError,
                    ErrorContainer &error)
 {
     LOG_DEBUG("Validate JWT-Token");
@@ -101,7 +103,8 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     Kitsunemimi::splitStringByDelimiter(tokenParts, token, '.');
     if(tokenParts.size() != 3)
     {
-        error.addMeesage("Token is broken");
+        publicError = "Token is broken";
+        error.addMeesage(publicError);
         LOG_ERROR(error);
         return false;
     }
@@ -114,6 +117,7 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     Kitsunemimi::Crypto::decodeBase64(headerString, headerString);
     if(header.parse(headerString, error) == false)
     {
+        publicError = "Token is broken";
         error.addMeesage("Token-header is broken");
         LOG_ERROR(error);
         return false;
@@ -123,6 +127,7 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     if(header.contains("alg") == false
             || header.contains("typ") == false)
     {
+        publicError = "Token is broken";
         error.addMeesage("Token-header is not a valid JWT-header");
         LOG_ERROR(error);
         return false;
@@ -135,7 +140,8 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     // check type
     if(typ != "JWT")
     {
-        error.addMeesage("Token is not a JWT-token");
+        publicError = "Token is not a JWT-token";
+        error.addMeesage(publicError);
         LOG_ERROR(error);
         return false;
     }
@@ -143,6 +149,7 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     // try to validate the jwt-token
     if(validateSignature(alg, relevantPart, tokenParts.at(2), error) ==  false)
     {
+        publicError = "Token is invalid";
         error.addMeesage("Validation of JWT-token failed.");
         LOG_ERROR(error);
         return false;
@@ -154,6 +161,7 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     Kitsunemimi::Crypto::decodeBase64(payloadString, payloadString);
     if(resultPayload.parse(payloadString, error) == false)
     {
+        publicError = "Token is broken";
         error.addMeesage("Jwt-payload is broken");
         LOG_ERROR(error);
         return false;
@@ -162,6 +170,7 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     // check time-stamps within the payload
     if(checkTimesInPayload(resultPayload, error) ==  false)
     {
+        publicError = "Token is expired";
         error.addMeesage("Time-check of JWT-token failed.");
         LOG_ERROR(error);
         return false;
