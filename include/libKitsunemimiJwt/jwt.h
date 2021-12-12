@@ -22,6 +22,10 @@ class JsonItem;
 namespace Jwt
 {
 
+bool getJwtTokenPayload(Json::JsonItem &parsedResult,
+                        const std::string &token,
+                        ErrorContainer &error);
+
 class Jwt
 {
 public:
@@ -35,7 +39,6 @@ public:
                        const std::string &token,
                        std::string &publicError,
                        ErrorContainer &error);
-
 
 private:
     CryptoPP::SecByteBlock m_signingKey;
@@ -57,7 +60,7 @@ private:
     long getTimeSinceEpoch();
 };
 
-}
-}
+}  // namespace Jwt
+}  // namespace Kitsunemimi
 
 #endif // KITSUNEMIMI_JWT_H

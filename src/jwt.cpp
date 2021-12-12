@@ -73,6 +73,44 @@ Jwt::create_HS256_Token(std::string &result,
 }
 
 /**
+ * @brief get payload of token without validation
+ *
+ * @param parsedResult reference for returning the payload of the token, if valid
+ * @param token token to parse
+ * @param error reference for error-output
+ *
+ * @return true, if token is valid, else false
+ */
+bool
+getJwtTokenPayload(Json::JsonItem &parsedResult,
+                   const std::string &token,
+                   ErrorContainer &error)
+{
+    // split token
+    std::vector<std::string> tokenParts;
+    Kitsunemimi::splitStringByDelimiter(tokenParts, token, '.');
+    if(tokenParts.size() != 3)
+    {
+        error.addMeesage("Token is broken");
+        LOG_ERROR(error);
+        return false;
+    }
+
+    // convert and parse payload
+    std::string payloadString = tokenParts.at(1);
+    Kitsunemimi::Crypto::base64UrlToBase64(payloadString);
+    Kitsunemimi::Crypto::decodeBase64(payloadString, payloadString);
+    if(parsedResult.parse(payloadString, error) == false)
+    {
+        error.addMeesage("Token-payload is broken");
+        LOG_ERROR(error);
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * @brief validate a jwt-Token
  *
  * @param resultPayload reference for returning the payload of the token, if valid
@@ -314,5 +352,5 @@ Jwt::getTimeSinceEpoch()
     return std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 }
 
-}
-}
+}  // namespace Jwt
+}  // namespace Kitsunemimi

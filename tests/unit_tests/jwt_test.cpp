@@ -40,7 +40,7 @@ JWT_Test::create_validate_HS256_Token_test()
     // prepare test-payload
     const std::string testPayload = "{"
                                     "    \"sub\":\"1234567890\","
-                                    "    \"name\":\"John Doe\","
+                                    "    \"name\":\"Test-User\","
                                     "    \"iat\":1516239022"
                                     "}";
     Kitsunemimi::Json::JsonItem payloadJson;
@@ -57,7 +57,13 @@ JWT_Test::create_validate_HS256_Token_test()
     // test token-validation with valid token
     Kitsunemimi::Json::JsonItem resultPayloadJson;
     TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, publicError, error), true);
-    TEST_EQUAL(resultPayloadJson.get("name").getString(), "John Doe");
+    TEST_EQUAL(resultPayloadJson.get("name").getString(), "Test-User");
+    error._errorMessages.clear();
+
+    // test getter for token-payload without validation
+    Kitsunemimi::Json::JsonItem resultPayloadJson2;
+    TEST_EQUAL(Kitsunemimi::Jwt::getJwtTokenPayload(resultPayloadJson2, token, error), true);
+    TEST_EQUAL(resultPayloadJson2.get("name").getString(), "Test-User");
     error._errorMessages.clear();
 
     // test token-validation with broken token
