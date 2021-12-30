@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] - 2021-12-30
+
+### Added
+- add getter for token-payload without validation
+
+
 ## [0.4.0] - 2021-11-26
 
 ### Added
