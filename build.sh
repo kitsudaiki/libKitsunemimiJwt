@@ -71,7 +71,7 @@ function get_required_private_repo_github () {
     ADDITIONAL_CONFIGS=$4
 
     # clone repo
-    git clone https://kitsudaiki:986ec116cd18aa45cfb81e57916518f6ff83bf19@github.com/kitsudaiki/$REPO_NAME.git "$PARENT_DIR/$REPO_NAME"
+    git clone https://kitsudaiki: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@github.com/kitsudaiki/$REPO_NAME.git "$PARENT_DIR/$REPO_NAME"
     cd "$PARENT_DIR/$REPO_NAME"
     git checkout $TAG_OR_BRANCH
 
@@ -82,7 +82,7 @@ function get_required_private_repo_github () {
 
 get_required_kitsune_lib_repo "libKitsunemimiCommon" "v0.25.0" 4 "staticlib"
 
-get_required_kitsune_lib_repo "libKitsunemimiCrypto" "v0.2.0" 4 "staticlib"
+get_required_private_repo_github "libKitsunemimiCrypto" "develop" 4 "staticlib"
 
 get_required_kitsune_lib_repo "libKitsunemimiJson" "v0.11.3" 4 "staticlib"
 
