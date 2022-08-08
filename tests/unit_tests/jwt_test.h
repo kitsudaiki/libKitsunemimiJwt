@@ -9,6 +9,8 @@
 #ifndef JWT_TEST_H
 #define JWT_TEST_H
 
+#include <assert.h>
+
 #include <libKitsunemimiCommon/test_helper/compare_test_helper.h>
 
 namespace Kitsunemimi

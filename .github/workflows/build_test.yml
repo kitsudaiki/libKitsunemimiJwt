@@ -17,6 +17,8 @@ jobs:
       - name: "Install missing packages"
         run: apt-get install -y  libssl-dev libcrypto++-dev
       - name: "Build project"
+        env: 
+          CLONE_TOKEN: ${{ secrets.CLONE_TOKEN }}
         run: ./build.sh test
       - name: "Copy files"
         run: |
