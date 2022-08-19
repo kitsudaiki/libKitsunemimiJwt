@@ -36,21 +36,23 @@ Jwt::Jwt(const CryptoPP::SecByteBlock &signingKey)
  * @param payload payload which has to be signed
  * @param validSeconds timespan in second in which the token is valid.
  *                     If value is 0, the token doesn't expire
+ * @param error reference for error-output
  *
  * @return true, if successfull, else false
  */
 bool
 Jwt::create_HS256_Token(std::string &result,
                         Kitsunemimi::Json::JsonItem &payload,
-                        const u_int32_t validSeconds)
+                        const u_int32_t validSeconds,
+                        ErrorContainer &error)
 {
     LOG_DEBUG("Create new HS256-JWT-Token");
 
     // convert header
     const std::string header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
     std::string headerBase64;
-    Kitsunemimi::Crypto::encodeBase64(headerBase64, header.c_str(), header.size());
-    Kitsunemimi::Crypto::base64ToBase64Url(headerBase64);
+    Crypto::encodeBase64(headerBase64, header.c_str(), header.size());
+    Crypto::base64ToBase64Url(headerBase64);
     result = headerBase64;
 
     // add timestamps
@@ -59,14 +61,18 @@ Jwt::create_HS256_Token(std::string &result,
     // convert payload
     std::string payloadBase64;
     const std::string payloadString = payload.toString();
-    Kitsunemimi::Crypto::encodeBase64(payloadBase64, payloadString.c_str(), payloadString.size());
-    Kitsunemimi::Crypto::base64ToBase64Url(payloadBase64);
+    Crypto::encodeBase64(payloadBase64, payloadString.c_str(), payloadString.size());
+    Crypto::base64ToBase64Url(payloadBase64);
     result += "." + payloadBase64;
 
     // create signature
     std::string secretHmac;
-    Kitsunemimi::Crypto::create_HMAC_SHA256(secretHmac, result, m_signingKey);
-    Kitsunemimi::Crypto::base64ToBase64Url(secretHmac);
+    if(Crypto::create_HMAC_SHA256(secretHmac, result, m_signingKey, error) == false)
+    {
+        error.addMeesage("Failed to create HMAC");
+        return false;
+    }
+    Crypto::base64ToBase64Url(secretHmac);
     result += "." + secretHmac;
 
     return true;
@@ -98,8 +104,8 @@ getJwtTokenPayload(Json::JsonItem &parsedResult,
 
     // convert and parse payload
     std::string payloadString = tokenParts.at(1);
-    Kitsunemimi::Crypto::base64UrlToBase64(payloadString);
-    Kitsunemimi::Crypto::decodeBase64(payloadString, payloadString);
+    Crypto::base64UrlToBase64(payloadString);
+    Crypto::decodeBase64(payloadString, payloadString);
     if(parsedResult.parse(payloadString, error) == false)
     {
         error.addMeesage("Token-payload is broken");
@@ -151,8 +157,8 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     // convert header the get information
     Json::JsonItem header;
     std::string headerString = tokenParts.at(0);
-    Kitsunemimi::Crypto::base64UrlToBase64(headerString);
-    Kitsunemimi::Crypto::decodeBase64(headerString, headerString);
+    Crypto::base64UrlToBase64(headerString);
+    Crypto::decodeBase64(headerString, headerString);
     if(header.parse(headerString, error) == false)
     {
         publicError = "Token is broken";
@@ -195,8 +201,8 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
 
     // convert payload for output
     std::string payloadString = tokenParts.at(1);
-    Kitsunemimi::Crypto::base64UrlToBase64(payloadString);
-    Kitsunemimi::Crypto::decodeBase64(payloadString, payloadString);
+    Crypto::base64UrlToBase64(payloadString);
+    Crypto::decodeBase64(payloadString, payloadString);
     if(resultPayload.parse(payloadString, error) == false)
     {
         publicError = "Token is broken";
@@ -261,8 +267,12 @@ Jwt::validate_HS256_Signature(const std::string &relevantPart,
 {
     // create hmac again
     std::string compare;
-    Kitsunemimi::Crypto::create_HMAC_SHA256(compare, relevantPart, m_signingKey);
-    Kitsunemimi::Crypto::base64ToBase64Url(compare);
+    if(Crypto::create_HMAC_SHA256(compare, relevantPart, m_signingKey, error) == false)
+    {
+        error.addMeesage("Failed to create HMAC");
+        return false;
+    }
+    Crypto::base64ToBase64Url(compare);
 
     // compare new create hmac-value with the one from the token
     if(compare.size() == signature.size()

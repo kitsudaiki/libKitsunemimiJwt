@@ -33,7 +33,8 @@ public:
 
     bool create_HS256_Token(std::string &result,
                             Kitsunemimi::Json::JsonItem &payload,
-                            const u_int32_t validSeconds);
+                            const u_int32_t validSeconds,
+                            ErrorContainer &error);
 
     bool validateToken(Kitsunemimi::Json::JsonItem &resultPayload,
                        const std::string &token,
