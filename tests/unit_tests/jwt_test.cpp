@@ -51,7 +51,7 @@ JWT_Test::create_validate_HS256_Token_test()
 
     // test token-creation
     std::string token;
-    TEST_EQUAL(jwt.create_HS256_Token(token, payloadJson, 1000), true);
+    TEST_EQUAL(jwt.create_HS256_Token(token, payloadJson, 1000, error), true);
     LOG_DEBUG("token: " + token);
 
     // test token-validation with valid token
