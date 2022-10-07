@@ -65,7 +65,7 @@ function get_required_private_repo_github () {
 
 #-----------------------------------------------------------------------------------------------------------------
 
-get_required_kitsune_lib_repo "libKitsunemimiCommon" "v0.27.0" 8 "staticlib"
+get_required_kitsune_lib_repo "libKitsunemimiCommon" "develop" 8 "staticlib"
 
 get_required_private_repo_github "libKitsunemimiCrypto" "develop" 8 "staticlib"
 
