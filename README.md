@@ -37,9 +37,9 @@ IMPORTANT: All my projects are only tested on Linux.
 
 Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
-libKitsunemimiCommon | v0.25.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
-libKitsunemimiCrypto | v0.2.0 |  -
-libKitsunemimiJson | v0.11.3 |  https://github.com/kitsudaiki/libKitsunemimiJson.git
+libKitsunemimiCommon | v0.27.1 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
+libKitsunemimiCrypto | v0.3.0 |  https://github.com/kitsudaiki/libKitsunemimiCrypto.git
+libKitsunemimiJson | v0.12.0 |  https://github.com/kitsudaiki/libKitsunemimiJson.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
@@ -64,8 +64,43 @@ Tested on Debian and Ubuntu. If you use Centos, Arch, etc and the build-script f
 
 ## Usage
 
-(comes later)
+```cpp
+#include <libKitsunemimiJwt/jwt.h>
+#include <libKitsunemimiJson/json_item.h>
+#include <libKitsunemimiCommon/logger.h>
 
+const std::string testSecret = "your-256-bit-secret";
+CryptoPP::SecByteBlock key((unsigned char*)testSecret.c_str(), testSecret.size());
+
+// init test-class
+Kitsunemimi::Jwt::Jwt jwt(key);
+
+// prepare test-payload for the token
+const std::string testPayload = "{"
+                                "    \"sub\":\"1234567890\","
+                                "    \"name\":\"Test-User\","
+                                "    \"iat\":1516239022"
+                                "}";
+Kitsunemimi::Json::JsonItem payloadJson;
+payloadJson.parse(testPayload, error);
+
+// test token-creation
+ErrorContainer error;
+std::string token = "";
+u_int32_t expireTime = 1000;  // seconds untile token is invalid
+jwt.create_HS256_Token(token, payloadJson, expireTime, error);
+// if this command was successful, the new token is now written into the "token"-variable
+// if failed, then error can be printed with std::cout<<error.toString()<<std::endl;
+
+// test token-validation with valid token
+Kitsunemimi::Json::JsonItem resultPayloadJson;
+std::string publicError = "";
+bool success = jwt.validateToken(resultPayloadJson, token, publicError, error);
+// if success is true, then the validation-process was successful
+// "publicError" is only an additional error-output, 
+//      which gives bad a more generic message without internal information
+
+```
 ## Contributing
 
 Please give me as many inputs as possible: Bugs, bad code style, bad documentation and so on.
