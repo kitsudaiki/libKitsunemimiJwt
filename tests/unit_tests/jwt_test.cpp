@@ -14,8 +14,6 @@
 
 namespace Kitsunemimi
 {
-namespace Jwt
-{
 
 JWT_Test::JWT_Test()
     : Kitsunemimi::CompareTestHelper("JWT_Test")
@@ -43,7 +41,7 @@ JWT_Test::create_validate_HS256_Token_test()
                                     "    \"name\":\"Test-User\","
                                     "    \"iat\":1516239022"
                                     "}";
-    Kitsunemimi::Json::JsonItem payloadJson;
+    JsonItem payloadJson;
     ErrorContainer error;
     std::string publicError = "";
     assert(payloadJson.parse(testPayload, error));
@@ -55,14 +53,14 @@ JWT_Test::create_validate_HS256_Token_test()
     LOG_DEBUG("token: " + token);
 
     // test token-validation with valid token
-    Kitsunemimi::Json::JsonItem resultPayloadJson;
+    JsonItem resultPayloadJson;
     TEST_EQUAL(jwt.validateToken(resultPayloadJson, token, publicError, error), true);
     TEST_EQUAL(resultPayloadJson.get("name").getString(), "Test-User");
     error._errorMessages.clear();
 
     // test getter for token-payload without validation
-    Kitsunemimi::Json::JsonItem resultPayloadJson2;
-    TEST_EQUAL(Kitsunemimi::Jwt::getJwtTokenPayload(resultPayloadJson2, token, error), true);
+    JsonItem resultPayloadJson2;
+    TEST_EQUAL(getJwtTokenPayload(resultPayloadJson2, token, error), true);
     TEST_EQUAL(resultPayloadJson2.get("name").getString(), "Test-User");
     error._errorMessages.clear();
 
@@ -73,5 +71,3 @@ JWT_Test::create_validate_HS256_Token_test()
 }
 
 }
-}
-

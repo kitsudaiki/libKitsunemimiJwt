@@ -16,13 +16,9 @@
 
 namespace Kitsunemimi
 {
-namespace Json {
 class JsonItem;
-}
-namespace Jwt
-{
 
-bool getJwtTokenPayload(Json::JsonItem &parsedResult,
+bool getJwtTokenPayload(JsonItem &parsedResult,
                         const std::string &token,
                         ErrorContainer &error);
 
@@ -32,11 +28,11 @@ public:
     Jwt(const CryptoPP::SecByteBlock &signingKey);
 
     bool create_HS256_Token(std::string &result,
-                            Kitsunemimi::Json::JsonItem &payload,
+                            JsonItem &payload,
                             const u_int32_t validSeconds,
                             ErrorContainer &error);
 
-    bool validateToken(Kitsunemimi::Json::JsonItem &resultPayload,
+    bool validateToken(JsonItem &resultPayload,
                        const std::string &token,
                        std::string &publicError,
                        ErrorContainer &error);
@@ -54,14 +50,13 @@ private:
                                   ErrorContainer &error);
 
     // times
-    void addTimesToPayload(Kitsunemimi::Json::JsonItem &payload,
+    void addTimesToPayload(JsonItem &payload,
                            const u_int32_t validSeconds);
-    bool checkTimesInPayload(const Json::JsonItem &payload,
+    bool checkTimesInPayload(const JsonItem &payload,
                              ErrorContainer &error);
     long getTimeSinceEpoch();
 };
 
-}  // namespace Jwt
 }  // namespace Kitsunemimi
 
 #endif // KITSUNEMIMI_JWT_H

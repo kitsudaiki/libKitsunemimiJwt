@@ -10,7 +10,7 @@
 
 int main()
 {
-    Kitsunemimi::Jwt::JWT_Test();
+    Kitsunemimi::JWT_Test();
 
     return 0;
 }

@@ -16,8 +16,6 @@
 
 namespace Kitsunemimi
 {
-namespace Jwt
-{
 
 /**
  * @brief constructor
@@ -42,7 +40,7 @@ Jwt::Jwt(const CryptoPP::SecByteBlock &signingKey)
  */
 bool
 Jwt::create_HS256_Token(std::string &result,
-                        Kitsunemimi::Json::JsonItem &payload,
+                        JsonItem &payload,
                         const u_int32_t validSeconds,
                         ErrorContainer &error)
 {
@@ -51,8 +49,8 @@ Jwt::create_HS256_Token(std::string &result,
     // convert header
     const std::string header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
     std::string headerBase64;
-    Crypto::encodeBase64(headerBase64, header.c_str(), header.size());
-    Crypto::base64ToBase64Url(headerBase64);
+    encodeBase64(headerBase64, header.c_str(), header.size());
+    base64ToBase64Url(headerBase64);
     result = headerBase64;
 
     // add timestamps
@@ -61,18 +59,18 @@ Jwt::create_HS256_Token(std::string &result,
     // convert payload
     std::string payloadBase64;
     const std::string payloadString = payload.toString();
-    Crypto::encodeBase64(payloadBase64, payloadString.c_str(), payloadString.size());
-    Crypto::base64ToBase64Url(payloadBase64);
+    encodeBase64(payloadBase64, payloadString.c_str(), payloadString.size());
+    base64ToBase64Url(payloadBase64);
     result += "." + payloadBase64;
 
     // create signature
     std::string secretHmac;
-    if(Crypto::create_HMAC_SHA256(secretHmac, result, m_signingKey, error) == false)
+    if(create_HMAC_SHA256(secretHmac, result, m_signingKey, error) == false)
     {
         error.addMeesage("Failed to create HMAC");
         return false;
     }
-    Crypto::base64ToBase64Url(secretHmac);
+    base64ToBase64Url(secretHmac);
     result += "." + secretHmac;
 
     return true;
@@ -88,13 +86,13 @@ Jwt::create_HS256_Token(std::string &result,
  * @return true, if token is valid, else false
  */
 bool
-getJwtTokenPayload(Json::JsonItem &parsedResult,
+getJwtTokenPayload(JsonItem &parsedResult,
                    const std::string &token,
                    ErrorContainer &error)
 {
     // split token
     std::vector<std::string> tokenParts;
-    Kitsunemimi::splitStringByDelimiter(tokenParts, token, '.');
+    splitStringByDelimiter(tokenParts, token, '.');
     if(tokenParts.size() != 3)
     {
         error.addMeesage("Token is broken");
@@ -104,8 +102,8 @@ getJwtTokenPayload(Json::JsonItem &parsedResult,
 
     // convert and parse payload
     std::string payloadString = tokenParts.at(1);
-    Crypto::base64UrlToBase64(payloadString);
-    Crypto::decodeBase64(payloadString, payloadString);
+    base64UrlToBase64(payloadString);
+    decodeBase64(payloadString, payloadString);
     if(parsedResult.parse(payloadString, error) == false)
     {
         error.addMeesage("Token-payload is broken");
@@ -127,7 +125,7 @@ getJwtTokenPayload(Json::JsonItem &parsedResult,
  * @return true, if token is valid, else false
  */
 bool
-Jwt::validateToken(Json::JsonItem &resultPayload,
+Jwt::validateToken(JsonItem &resultPayload,
                    const std::string &token,
                    std::string &publicError,
                    ErrorContainer &error)
@@ -144,7 +142,7 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
 
     // filter relevant part from the token
     std::vector<std::string> tokenParts;
-    Kitsunemimi::splitStringByDelimiter(tokenParts, token, '.');
+    splitStringByDelimiter(tokenParts, token, '.');
     if(tokenParts.size() != 3)
     {
         publicError = "Token is broken";
@@ -155,10 +153,10 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
     const std::string relevantPart = tokenParts.at(0) + "." + tokenParts.at(1);
 
     // convert header the get information
-    Json::JsonItem header;
+    JsonItem header;
     std::string headerString = tokenParts.at(0);
-    Crypto::base64UrlToBase64(headerString);
-    Crypto::decodeBase64(headerString, headerString);
+    base64UrlToBase64(headerString);
+    decodeBase64(headerString, headerString);
     if(header.parse(headerString, error) == false)
     {
         publicError = "Token is broken";
@@ -201,8 +199,8 @@ Jwt::validateToken(Json::JsonItem &resultPayload,
 
     // convert payload for output
     std::string payloadString = tokenParts.at(1);
-    Crypto::base64UrlToBase64(payloadString);
-    Crypto::decodeBase64(payloadString, payloadString);
+    base64UrlToBase64(payloadString);
+    decodeBase64(payloadString, payloadString);
     if(resultPayload.parse(payloadString, error) == false)
     {
         publicError = "Token is broken";
@@ -262,17 +260,17 @@ Jwt::validateSignature(const std::string &alg,
  */
 bool
 Jwt::validate_HS256_Signature(const std::string &relevantPart,
-                          const std::string &signature,
-                          ErrorContainer &error)
+                              const std::string &signature,
+                              ErrorContainer &error)
 {
     // create hmac again
     std::string compare;
-    if(Crypto::create_HMAC_SHA256(compare, relevantPart, m_signingKey, error) == false)
+    if(create_HMAC_SHA256(compare, relevantPart, m_signingKey, error) == false)
     {
         error.addMeesage("Failed to create HMAC");
         return false;
     }
-    Crypto::base64ToBase64Url(compare);
+    base64ToBase64Url(compare);
 
     // compare new create hmac-value with the one from the token
     if(compare.size() == signature.size()
@@ -295,7 +293,7 @@ Jwt::validate_HS256_Signature(const std::string &relevantPart,
  *                     If value is 0, the token doesn't expire
  */
 void
-Jwt::addTimesToPayload(Json::JsonItem &payload,
+Jwt::addTimesToPayload(JsonItem &payload,
                        const u_int32_t validSeconds)
 {
     // get times
@@ -320,7 +318,7 @@ Jwt::addTimesToPayload(Json::JsonItem &payload,
  * @return true, if times are valid, else false
  */
 bool
-Jwt::checkTimesInPayload(const Json::JsonItem &payload,
+Jwt::checkTimesInPayload(const JsonItem &payload,
                          ErrorContainer &error)
 {
     const long nowSec = getTimeSinceEpoch();
@@ -362,5 +360,4 @@ Jwt::getTimeSinceEpoch()
     return std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 }
 
-}  // namespace Jwt
 }  // namespace Kitsunemimi

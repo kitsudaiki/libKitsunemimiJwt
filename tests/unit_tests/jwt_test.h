@@ -15,8 +15,6 @@
 
 namespace Kitsunemimi
 {
-namespace Jwt
-{
 
 class JWT_Test
         : public Kitsunemimi::CompareTestHelper
@@ -28,7 +26,6 @@ private:
     void create_validate_HS256_Token_test();
 };
 
-}
 }
 
 #endif // JWT_TEST_H
